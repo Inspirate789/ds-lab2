@@ -15,8 +15,8 @@ type Car struct {
 	Brand              string
 	Model              string
 	RegistrationNumber string
-	Power              int64
-	Price              int
+	Power              uint64
+	Price              uint64
 	Type               CarType
 	Availability       bool
 }

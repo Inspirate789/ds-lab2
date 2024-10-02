@@ -1,36 +1,35 @@
 package app
 
 import (
-	"github.com/knadh/koanf/parsers/yaml"
-	"github.com/knadh/koanf/providers/file"
-	"github.com/knadh/koanf/v2"
+	"github.com/nil-go/konf"
+	"github.com/nil-go/konf/provider/file"
 )
 
 type Config struct {
 	Logging struct {
-		Level int `koanf:"level"`
-	} `koanf:"logging"`
-	Web WebConfig `koanf:"web"`
+		Level int
+	}
+	Web WebConfig
 	DB  struct {
-		DriverName       string `koanf:"driver_name"`
-		ConnectionString string `koanf:"connection_string"`
-	} `koanf:"db"`
+		DriverName       string
+		ConnectionString string
+	}
 }
 
 func ReadLocalConfig(configPath string) (Config, error) {
-	config := koanf.New(".")
+	var config konf.Config
 
-	err := config.Load(file.Provider(configPath), yaml.Parser())
+	err := config.Load(file.New(configPath))
 	if err != nil {
 		return Config{}, err
 	}
 
-	var cfg Config
+	var res Config
 
-	err = config.Unmarshal("", &cfg)
+	err = config.Unmarshal("", &res)
 	if err != nil {
 		return Config{}, err
 	}
 
-	return cfg, nil
+	return res, nil
 }

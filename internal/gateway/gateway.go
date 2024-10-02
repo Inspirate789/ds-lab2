@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"context"
+	"github.com/Inspirate789/ds-lab2/internal/gateway/errors"
 	"github.com/Inspirate789/ds-lab2/internal/models"
 	"github.com/Inspirate789/ds-lab2/internal/pkg/app"
 	"github.com/gofiber/fiber/v2"
@@ -14,22 +15,25 @@ import (
 
 type CarsAPI interface {
 	app.HealthChecker
-	GetCars(ctx context.Context, offset, limit uint64, showAll bool) (res []models.Car, totalCount int64, err error)
-	LockCar(ctx context.Context, carUID string) (found bool, err error)
-	UnlockCar(ctx context.Context, carUID string) (found bool, err error)
+	GetCars(ctx context.Context, offset, limit uint64, showAll bool) (res []models.Car, totalCount uint64, err error)
+	GetCar(ctx context.Context, carUID string) (res models.Car, found bool, err error)
+	LockCar(ctx context.Context, carUID string) (res models.Car, found, success bool, err error)
+	UnlockCar(ctx context.Context, carUID string) (err error)
 }
 
 type RentalsAPI interface {
 	app.HealthChecker
-	GetUserRentals(ctx context.Context, username string, offset, limit uint64) (res []models.Rental, totalCount int64, err error)
+	GetUserRentals(ctx context.Context, username string, offset, limit uint64) (res []models.Rental, totalCount uint64, err error)
 	GetUserRental(ctx context.Context, rentalUID, username string) (res models.Rental, found, permitted bool, err error)
-	CreateRental(carUID, username string, dateFrom, dateTo time.Time) (res models.Rental, err error)
+	CreateRental(ctx context.Context, properties models.RentalProperties) (res models.Rental, err error)
+	SetRentalStatus(ctx context.Context, rentalUID string, status models.RentalStatus) (found bool, err error)
 }
 
 type PaymentsAPI interface {
 	app.HealthChecker
 	CreatePayment(ctx context.Context, price uint64) (res models.Payment, err error)
-	CancelPayment(ctx context.Context, paymentUID string) (res models.Payment, found bool, err error)
+	SetPaymentStatus(ctx context.Context, paymentUID string, status models.PaymentStatus) (found bool, err error)
+	GetPayment(ctx context.Context, paymentUID string) (res models.Payment, found bool, err error)
 }
 
 type Gateway struct {
@@ -89,7 +93,7 @@ func (gateway *Gateway) getCars(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	return ctx.Status(fiber.StatusOK).JSON(NewCarsDTO(cars, page*size, size, totalCount).Map())
+	return ctx.Status(fiber.StatusOK).JSON(NewCarsDTO(cars, page, size, totalCount))
 }
 
 func (gateway *Gateway) getRentals(ctx *fiber.Ctx) error {
@@ -112,7 +116,31 @@ func (gateway *Gateway) getRentals(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	return ctx.Status(fiber.StatusOK).JSON(NewRentalsDTO(rentals, page*size, size, totalCount).Map())
+	cars := make(map[string]models.Car)
+	for _, rental := range rentals {
+		car, found, err := gateway.carsAPI.GetCar(ctx.Context(), rental.CarUID)
+		if err != nil {
+			return err
+		} else if !found {
+			return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrCarNotFound.Map())
+		}
+
+		cars[rental.CarUID] = car
+	}
+
+	payments := make([]models.Payment, 0)
+	for _, rental := range rentals {
+		payment, found, err := gateway.paymentsAPI.GetPayment(ctx.Context(), rental.PaymentUID)
+		if err != nil {
+			return err
+		} else if !found {
+			return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrPaymentNotFound.Map())
+		}
+
+		payments = append(payments, payment)
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(NewRentalsDTO(rentals, cars, payments, page, size, totalCount))
 }
 
 func (gateway *Gateway) getRental(ctx *fiber.Ctx) error {
@@ -122,27 +150,189 @@ func (gateway *Gateway) getRental(ctx *fiber.Ctx) error {
 	rental, found, permitted, err := gateway.rentalsAPI.GetUserRental(ctx.Context(), rentalUID, username)
 	if err != nil {
 		return err
-	}
-
-	if !found {
-		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrRetalNotFound.Map())
-	}
-
-	if !permitted {
+	} else if !found {
+		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrRentalNotFound.Map())
+	} else if !permitted {
 		return ctx.Status(fiber.StatusForbidden).JSON(errors.ErrRentalNotPermitted.Map())
 	}
 
-	return ctx.Status(fiber.StatusOK).JSON(NewRentalDTO(rental).Map())
+	car, found, err := gateway.carsAPI.GetCar(ctx.Context(), rental.CarUID)
+	if err != nil {
+		return err
+	} else if !found {
+		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrCarNotFound.Map())
+	}
+
+	payment, found, err := gateway.paymentsAPI.GetPayment(ctx.Context(), rental.PaymentUID)
+	if err != nil {
+		return err
+	} else if !found {
+		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrPaymentNotFound.Map())
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(NewRentalDTO(rental, car, payment))
 }
 
 func (gateway *Gateway) startCarRental(ctx *fiber.Ctx) error {
+	// 0. Read request data
+	username := ctx.Get("X-User-Name")
+	var dto CarRentalRequest
 
+	err := ctx.BodyParser(&dto)
+	if err != nil {
+		gateway.logger.Error(err.Error())
+		parseErr := errors.ErrInvalidRentalRequest(err.Error())
+
+		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(parseErr.Map())
+	}
+
+	dateFrom, err := time.Parse(time.DateOnly, dto.DateFrom)
+	if err != nil {
+		gateway.logger.Error(err.Error())
+		parseErr := errors.ErrInvalidDateFrom(err.Error())
+
+		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(parseErr.Map())
+	}
+
+	dateTo, err := time.Parse(time.DateOnly, dto.DateTo)
+	if err != nil {
+		gateway.logger.Error(err.Error())
+		parseErr := errors.ErrInvalidDateTo(err.Error())
+
+		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(parseErr.Map())
+	}
+
+	if !dateTo.After(dateFrom) {
+		dateErr := errors.ErrInvalidRentalPeriod(dto.DateFrom, dto.DateTo)
+		return ctx.Status(fiber.StatusUnprocessableEntity).JSON(dateErr.Map())
+	}
+
+	// 1. Lock car
+	car, found, success, err := gateway.carsAPI.LockCar(ctx.Context(), dto.CarUID)
+	if err != nil {
+		return err
+	} else if !found {
+		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrCarNotFound.Map())
+	} else if !success {
+		return ctx.Status(fiber.StatusLocked).JSON(errors.ErrCarAlreadyRent.Map())
+	}
+
+	defer func() {
+		if err != nil {
+			rollbackErr := gateway.carsAPI.UnlockCar(ctx.Context(), dto.CarUID)
+			err = multierr.Append(err, errors.ErrRollbackWrap(rollbackErr))
+		}
+	}()
+
+	// 2. Create payment
+	price := uint64(dateTo.Sub(dateFrom)/(24*time.Hour)) * car.Price
+
+	payment, err := gateway.paymentsAPI.CreatePayment(ctx.Context(), price)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			_, rollbackErr := gateway.paymentsAPI.SetPaymentStatus(ctx.Context(), payment.PaymentUID, models.PaymentCanceled)
+			err = multierr.Append(err, errors.ErrRollbackWrap(rollbackErr))
+		}
+	}()
+
+	// 3. Create rental
+	rental, err := gateway.rentalsAPI.CreateRental(ctx.Context(), models.RentalProperties{
+		Username:   username,
+		PaymentUID: payment.PaymentUID,
+		CarUID:     dto.CarUID,
+		DateFrom:   dateFrom,
+		DateTo:     dateTo,
+		Status:     models.RentalInProgress,
+	}) // dto.CarUID, username, dateFrom, dateTo)
+	if err != nil {
+		return err
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(NewRentalResponse(rental, payment))
 }
 
-func (gateway *Gateway) cancelCarRental(ctx *fiber.Ctx) error {
+func (gateway *Gateway) cancelCarRental(ctx *fiber.Ctx) (err error) {
+	// 0. Read request data
+	username := ctx.Get("X-User-Name")
+	rentalUID := ctx.Params("rentalUID")
 
+	// 1. Check rental access
+	rental, found, permitted, err := gateway.rentalsAPI.GetUserRental(ctx.Context(), rentalUID, username)
+	if err != nil {
+		return err
+	} else if !found {
+		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrRentalNotFound.Map())
+	} else if !permitted {
+		return ctx.Status(fiber.StatusForbidden).JSON(errors.ErrRentalNotPermitted.Map())
+	}
+
+	// 2. Unlock car
+	err = gateway.carsAPI.UnlockCar(ctx.Context(), rental.CarUID)
+	if err != nil {
+		return err
+	}
+
+	// 3. Cancel rental
+	_, err = gateway.rentalsAPI.SetRentalStatus(ctx.Context(), rentalUID, models.RentalCanceled)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err != nil {
+			_, rollbackErr := gateway.rentalsAPI.SetRentalStatus(ctx.Context(), rentalUID, models.RentalInProgress)
+			err = multierr.Append(err, errors.ErrRollbackWrap(rollbackErr))
+		}
+	}()
+
+	// 4. Cancel payment
+	found, err = gateway.paymentsAPI.SetPaymentStatus(ctx.Context(), rental.PaymentUID, models.PaymentCanceled)
+	if err != nil {
+		return err
+	} else if !found {
+		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrPaymentNotFound.Map())
+	}
+
+	defer func() {
+		if err != nil {
+			_, rollbackErr := gateway.paymentsAPI.SetPaymentStatus(ctx.Context(), rental.PaymentUID, models.PaymentPaid)
+			err = multierr.Append(err, errors.ErrRollbackWrap(rollbackErr))
+		}
+	}()
+
+	return ctx.SendStatus(fiber.StatusNoContent)
 }
 
 func (gateway *Gateway) finishCarRental(ctx *fiber.Ctx) error {
+	// 0. Read request data
+	username := ctx.Get("X-User-Name")
+	rentalUID := ctx.Params("rentalUID")
 
+	// 1. Check rental access
+	rental, found, permitted, err := gateway.rentalsAPI.GetUserRental(ctx.Context(), rentalUID, username)
+	if err != nil {
+		return err
+	} else if !found {
+		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrRentalNotFound.Map())
+	} else if !permitted {
+		return ctx.Status(fiber.StatusForbidden).JSON(errors.ErrRentalNotPermitted.Map())
+	}
+
+	// 2. Unlock car
+	err = gateway.carsAPI.UnlockCar(ctx.Context(), rental.CarUID)
+	if err != nil {
+		return err
+	}
+
+	// 3. Finish rental
+	_, err = gateway.rentalsAPI.SetRentalStatus(ctx.Context(), rentalUID, models.RentalCanceled)
+	if err != nil {
+		return err
+	}
+
+	return ctx.SendStatus(fiber.StatusNoContent)
 }

@@ -21,9 +21,9 @@ type Delivery interface {
 }
 
 type WebConfig struct {
-	Host       string `koanf:"host"`
-	Port       string `koanf:"port"`
-	PathPrefix string `koanf:"path_prefix"`
+	Host       string
+	Port       string
+	PathPrefix string
 }
 
 type FiberApp struct {
@@ -63,8 +63,7 @@ func NewFiberApp(config WebConfig, delivery Delivery, logger *slog.Logger) *Fibe
 	app.Use(slogfiber.New(logger))
 	app.Use(pprof.New())
 
-	app.Get("/health/live", checkLiveness)
-	app.Get("/health/ready", checkReadiness(delivery))
+	app.Get("/manage/health", checkReadiness(delivery))
 
 	delivery.AddHandlers(app.Group(config.PathPrefix))
 
