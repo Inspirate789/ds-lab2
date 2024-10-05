@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	gateway "github.com/Inspirate789/ds-lab2/internal/car/delivery"
+	"github.com/Inspirate789/ds-lab2/internal/car/delivery"
 	"github.com/Inspirate789/ds-lab2/internal/models"
 	"io"
 	"log/slog"
@@ -81,14 +81,14 @@ func (api *CarsAPI) GetCars(ctx context.Context, offset, limit uint64, showAll b
 		return nil, 0, errors.New(string(body))
 	}
 
-	var cars gateway.CarsDTO
+	var cars delivery.CarsDTO
 
 	err = json.Unmarshal(body, &cars)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	return cars.Items, cars.Count, nil
+	return cars.ToModel(), cars.Count, nil
 }
 
 func (api *CarsAPI) GetCar(ctx context.Context, carUID string) (res models.Car, found bool, err error) {
@@ -116,14 +116,14 @@ func (api *CarsAPI) GetCar(ctx context.Context, carUID string) (res models.Car, 
 		return models.Car{}, false, errors.New(string(body))
 	}
 
-	var car models.Car // TODO: DTO from delivery
+	var car delivery.CarDTO
 
 	err = json.Unmarshal(body, &car)
 	if err != nil {
 		return models.Car{}, false, err
 	}
 
-	return car, true, nil
+	return car.ToModel(), true, nil
 }
 
 func (api *CarsAPI) LockCar(ctx context.Context, carUID string) (res models.Car, found, success bool, err error) {
@@ -153,14 +153,14 @@ func (api *CarsAPI) LockCar(ctx context.Context, carUID string) (res models.Car,
 		return models.Car{}, false, false, errors.New(string(body))
 	}
 
-	var car models.Car // TODO: DTO from delivery
+	var car delivery.CarDTO
 
 	err = json.Unmarshal(body, &car)
 	if err != nil {
 		return models.Car{}, false, false, err
 	}
 
-	return car, true, true, nil
+	return car.ToModel(), true, true, nil
 }
 
 func (api *CarsAPI) UnlockCar(ctx context.Context, carUID string) (err error) {

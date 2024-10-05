@@ -12,6 +12,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/lmittmann/tint"
 	"github.com/spf13/pflag"
 	"log/slog"
 	"os"
@@ -65,7 +66,7 @@ func main() {
 		panic(err)
 	}
 
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.Level(config.Logging.Level)}))
+	logger := slog.New(tint.NewHandler(os.Stdout, &tint.Options{Level: slog.Level(config.Logging.Level)}))
 
 	db, err := sqlx.Connect(config.DB.DriverName, config.DB.ConnectionString)
 	if err != nil {
