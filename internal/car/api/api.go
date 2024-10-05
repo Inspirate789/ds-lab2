@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	gateway "github.com/Inspirate789/ds-lab2/internal/car/delivery"
 	"github.com/Inspirate789/ds-lab2/internal/models"
 	"io"
 	"log/slog"
@@ -80,10 +81,7 @@ func (api *CarsAPI) GetCars(ctx context.Context, offset, limit uint64, showAll b
 		return nil, 0, errors.New(string(body))
 	}
 
-	var cars struct {
-		Items []models.Car `json:"items"` // TODO: DTO from delivery
-		Count uint64       `json:"count"`
-	}
+	var cars gateway.CarsDTO
 
 	err = json.Unmarshal(body, &cars)
 	if err != nil {

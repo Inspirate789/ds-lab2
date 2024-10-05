@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"context"
+	carErrors "github.com/Inspirate789/ds-lab2/internal/car/delivery/errors"
 	"github.com/Inspirate789/ds-lab2/internal/gateway/errors"
 	"github.com/Inspirate789/ds-lab2/internal/models"
 	"github.com/Inspirate789/ds-lab2/internal/pkg/app"
@@ -122,7 +123,7 @@ func (gateway *Gateway) getRentals(ctx *fiber.Ctx) error {
 		if err != nil {
 			return err
 		} else if !found {
-			return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrCarNotFound.Map())
+			return ctx.Status(fiber.StatusNotFound).JSON(carErrors.ErrCarNotFound.Map())
 		}
 
 		cars[rental.CarUID] = car
@@ -144,7 +145,7 @@ func (gateway *Gateway) getRentals(ctx *fiber.Ctx) error {
 }
 
 func (gateway *Gateway) getRental(ctx *fiber.Ctx) error {
-	rentalUID := ctx.Params("rentalUid")
+	rentalUID := ctx.Params("rentalUID")
 	username := ctx.Get("X-User-Name")
 
 	rental, found, permitted, err := gateway.rentalsAPI.GetUserRental(ctx.Context(), rentalUID, username)
@@ -160,7 +161,7 @@ func (gateway *Gateway) getRental(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	} else if !found {
-		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrCarNotFound.Map())
+		return ctx.Status(fiber.StatusNotFound).JSON(carErrors.ErrCarNotFound.Map())
 	}
 
 	payment, found, err := gateway.paymentsAPI.GetPayment(ctx.Context(), rental.PaymentUID)
@@ -212,9 +213,9 @@ func (gateway *Gateway) startCarRental(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	} else if !found {
-		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrCarNotFound.Map())
+		return ctx.Status(fiber.StatusNotFound).JSON(carErrors.ErrCarNotFound.Map())
 	} else if !success {
-		return ctx.Status(fiber.StatusLocked).JSON(errors.ErrCarAlreadyRent.Map())
+		return ctx.Status(fiber.StatusLocked).JSON(carErrors.ErrCarAlreadyRent.Map())
 	}
 
 	defer func() {

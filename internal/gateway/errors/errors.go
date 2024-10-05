@@ -11,11 +11,9 @@ func (e GatewayError) Map() map[string]any {
 }
 
 const (
-	ErrCarNotFound        GatewayError = "car not found"
 	ErrPaymentNotFound    GatewayError = "payment not found"
 	ErrRentalNotFound     GatewayError = "rental not found"
 	ErrRentalNotPermitted GatewayError = "rental not permitted"
-	ErrCarAlreadyRent     GatewayError = "car already rent"
 )
 
 func ErrInvalidRentalRequest(msg string) GatewayError {
