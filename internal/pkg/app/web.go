@@ -36,10 +36,6 @@ func newFiberError(msg string) map[string]any {
 	return fiber.Map{"message": msg}
 }
 
-func checkLiveness(ctx *fiber.Ctx) error {
-	return ctx.Status(fiber.StatusOK).SendString("live")
-}
-
 func checkReadiness(delivery HealthChecker) func(ctx *fiber.Ctx) error {
 	return func(ctx *fiber.Ctx) error {
 		err := delivery.HealthCheck(ctx.UserContext())

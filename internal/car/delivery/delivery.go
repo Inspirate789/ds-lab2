@@ -45,13 +45,13 @@ func (d *Delivery) AddHandlers(router fiber.Router) {
 func (d *Delivery) getCars(ctx *fiber.Ctx) error {
 	offset, err := strconv.ParseUint(ctx.Query("offset"), 10, 64)
 	if err != nil {
-		d.logger.Warn("cars offset not set, use default 0")
+		d.logger.Debug("cars offset not set, use default 0")
 		offset = 0
 	}
 
 	limit, err := strconv.ParseUint(ctx.Query("limit"), 10, 64)
 	if err != nil {
-		d.logger.Warn("cars limit not set, return all persons")
+		d.logger.Debug("cars limit not set, return all persons")
 		limit = math.MaxInt64
 	}
 

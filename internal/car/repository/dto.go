@@ -2,7 +2,7 @@ package repository
 
 import "github.com/Inspirate789/ds-lab2/internal/models"
 
-type Car struct {
+type CarDTO struct {
 	ID                 int64          `db:"id"`
 	CarUID             string         `db:"car_uid"`
 	Brand              string         `db:"brand"`
@@ -15,7 +15,7 @@ type Car struct {
 	TotalCount         uint64         `db:"total_count"`
 }
 
-func (car Car) ToModel() models.Car {
+func (car CarDTO) ToModel() models.Car {
 	return models.Car{
 		ID:                 car.ID,
 		CarUID:             car.CarUID,
@@ -29,9 +29,9 @@ func (car Car) ToModel() models.Car {
 	}
 }
 
-type Cars []Car
+type CarsDTO []CarDTO
 
-func (cars Cars) ToModel() ([]models.Car, uint64) {
+func (cars CarsDTO) ToModel() ([]models.Car, uint64) {
 	result := make([]models.Car, 0, len(cars))
 
 	for _, car := range cars {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"github.com/Inspirate789/ds-lab2/internal/car/usecase"
 	"github.com/Inspirate789/ds-lab2/internal/models"
 	"github.com/Inspirate789/ds-lab2/pkg/sqlxutils"
 	"github.com/jmoiron/sqlx"
@@ -16,7 +15,7 @@ type SqlxRepository struct {
 	logger *slog.Logger
 }
 
-func NewSqlxRepository(db *sqlx.DB, logger *slog.Logger) usecase.Repository {
+func NewSqlxRepository(db *sqlx.DB, logger *slog.Logger) *SqlxRepository {
 	return &SqlxRepository{
 		db:     db,
 		logger: logger,
@@ -28,7 +27,7 @@ func (r *SqlxRepository) HealthCheck(ctx context.Context) error {
 }
 
 func (r *SqlxRepository) GetCars(ctx context.Context, offset, limit uint64, showAll bool) ([]models.Car, uint64, error) {
-	cars := make(Cars, 0)
+	cars := make(CarsDTO, 0)
 
 	err := sqlxutils.Select(ctx, r.db, &cars, selectCarsQuery, offset, limit, showAll)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -43,7 +42,7 @@ func (r *SqlxRepository) GetCars(ctx context.Context, offset, limit uint64, show
 }
 
 func (r *SqlxRepository) GetCar(ctx context.Context, carUID string) (models.Car, bool, error) {
-	var dto Car
+	var dto CarDTO
 
 	err := sqlxutils.Get(ctx, r.db, &dto, selectCarQuery, carUID)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -56,7 +55,7 @@ func (r *SqlxRepository) GetCar(ctx context.Context, carUID string) (models.Car,
 }
 
 func (r *SqlxRepository) LockCar(ctx context.Context, carUID string) (res models.Car, found, success bool, err error) {
-	var dto Car
+	var dto CarDTO
 
 	err = sqlxutils.RunTx(ctx, r.db, sql.LevelDefault, func(tx *sqlx.Tx) error {
 		err = sqlxutils.Get(ctx, r.db, &dto, selectCarQuery, carUID)

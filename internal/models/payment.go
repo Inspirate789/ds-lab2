@@ -11,5 +11,5 @@ type Payment struct {
 	ID         int64
 	PaymentUID string
 	Status     PaymentStatus
-	Price      int64
+	Price      uint64
 }
