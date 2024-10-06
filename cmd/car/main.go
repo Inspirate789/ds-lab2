@@ -57,7 +57,7 @@ func shutdownApp(webApp WebApp, logger *slog.Logger) {
 
 func main() {
 	var configPath, migrationsPath string
-	pflag.StringVarP(&configPath, "config", "c", "configs/app.yaml", "Config file path")
+	pflag.StringVarP(&configPath, "config", "c", "configs/cars.yaml", "Config file path")
 	pflag.StringVarP(&migrationsPath, "migrations", "", "migrations", "Migrations directory path")
 	pflag.Parse()
 
