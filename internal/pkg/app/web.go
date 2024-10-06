@@ -51,6 +51,7 @@ func NewFiberApp(config WebConfig, delivery Delivery, logger *slog.Logger) *Fibe
 	app := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
 		ErrorHandler: func(ctx *fiber.Ctx, err error) error {
+			logger.Error(err.Error())
 			return ctx.Status(fiber.StatusInternalServerError).JSON(newFiberError(err.Error()))
 		},
 	})

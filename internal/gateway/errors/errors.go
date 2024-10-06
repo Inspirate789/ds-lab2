@@ -6,6 +6,10 @@ func (e GatewayError) Error() string {
 	return string(e)
 }
 
+const (
+	ErrInvalidPage GatewayError = "page number must be >= 1"
+)
+
 // TODO: use errors.Wrap() ?
 
 func (e GatewayError) Map() map[string]any {

@@ -3,7 +3,7 @@ logging:
 web:
   host:
   port: 8080
-  path_prefix: /api/v1
-carsApiAddr: http://cars-api:8080/api/v1
-rentalApiAddr: http://rental-api:8080/api/v1
-paymentApiAddr: http://payment-api:8080/api/v1
+  pathPrefix: /api/v1
+carsApiAddr: http://cars-api:8080
+rentalApiAddr: http://rental-api:8080
+paymentApiAddr: http://payment-api:8080

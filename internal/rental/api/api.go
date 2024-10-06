@@ -11,7 +11,6 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"path/filepath"
 )
 
 type Client interface {
@@ -33,7 +32,7 @@ func New(baseURL string, client *http.Client, logger *slog.Logger) *RentalsAPI {
 }
 
 func (api *RentalsAPI) HealthCheck(ctx context.Context) error {
-	endpoint := filepath.Join(api.baseURL, "manage/health")
+	endpoint := api.baseURL + "/manage/health"
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
@@ -60,7 +59,7 @@ func (api *RentalsAPI) HealthCheck(ctx context.Context) error {
 }
 
 func (api *RentalsAPI) GetUserRentals(ctx context.Context, username string, offset, limit uint64) ([]models.Rental, uint64, error) {
-	endpoint := filepath.Join(api.baseURL, fmt.Sprintf("/rentals?offset=%d&limit=%d", offset, limit))
+	endpoint := api.baseURL + fmt.Sprintf("/api/v1/rentals?offset=%d&limit=%d", offset, limit)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
@@ -100,7 +99,7 @@ func (api *RentalsAPI) GetUserRentals(ctx context.Context, username string, offs
 }
 
 func (api *RentalsAPI) GetUserRental(ctx context.Context, rentalUID, username string) (res models.Rental, found, permitted bool, err error) {
-	endpoint := filepath.Join(api.baseURL, "rentals", rentalUID)
+	endpoint := api.baseURL + "/api/v1/rentals/" + rentalUID
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
@@ -144,7 +143,7 @@ func (api *RentalsAPI) GetUserRental(ctx context.Context, rentalUID, username st
 }
 
 func (api *RentalsAPI) CreateRental(ctx context.Context, properties models.RentalProperties) (models.Rental, error) {
-	endpoint := filepath.Join(api.baseURL, "rentals")
+	endpoint := api.baseURL + "/api/v1/rentals"
 	dto := delivery.NewRentalPropertiesDTO(properties)
 
 	body, err := json.Marshal(dto)
@@ -188,7 +187,7 @@ func (api *RentalsAPI) CreateRental(ctx context.Context, properties models.Renta
 }
 
 func (api *RentalsAPI) SetRentalStatus(ctx context.Context, rentalUID string, status models.RentalStatus) (found bool, err error) {
-	endpoint := filepath.Join(api.baseURL, "rentals", rentalUID, "status")
+	endpoint := api.baseURL + "/api/v1/rentals/" + rentalUID + "/status"
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, endpoint, bytes.NewBufferString(fmt.Sprint(status)))
 	if err != nil {

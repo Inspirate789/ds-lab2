@@ -75,8 +75,10 @@ func (gateway *Gateway) AddHandlers(router fiber.Router) {
 func (gateway *Gateway) getCars(ctx *fiber.Ctx) error {
 	page, err := strconv.ParseUint(ctx.Query("page"), 10, 64)
 	if err != nil {
-		gateway.logger.Debug("car list page not set, use default 0")
-		page = 0
+		gateway.logger.Debug("car list page not set, use default 1")
+		page = 1
+	} else if page == 0 {
+		return ctx.Status(fiber.StatusBadRequest).JSON(errors.ErrInvalidPage.Map())
 	}
 
 	size, err := strconv.ParseUint(ctx.Query("size"), 10, 64)
@@ -91,7 +93,7 @@ func (gateway *Gateway) getCars(ctx *fiber.Ctx) error {
 		showAll = false
 	}
 
-	cars, totalCount, err := gateway.carsAPI.GetCars(ctx.Context(), page*size, size, showAll)
+	cars, totalCount, err := gateway.carsAPI.GetCars(ctx.Context(), (page-1)*size, size, showAll)
 	if err != nil {
 		return err
 	}
@@ -102,8 +104,10 @@ func (gateway *Gateway) getCars(ctx *fiber.Ctx) error {
 func (gateway *Gateway) getRentals(ctx *fiber.Ctx) error {
 	page, err := strconv.ParseUint(ctx.Query("page"), 10, 64)
 	if err != nil {
-		gateway.logger.Debug("car list page not set, use default 0")
-		page = 0
+		gateway.logger.Debug("car list page not set, use default 1")
+		page = 1
+	} else if page == 0 {
+		return ctx.Status(fiber.StatusBadRequest).JSON(errors.ErrInvalidPage.Map())
 	}
 
 	size, err := strconv.ParseUint(ctx.Query("size"), 10, 64)
@@ -114,7 +118,7 @@ func (gateway *Gateway) getRentals(ctx *fiber.Ctx) error {
 
 	username := ctx.Get("X-User-Name")
 
-	rentals, totalCount, err := gateway.rentalsAPI.GetUserRentals(ctx.Context(), username, page*size, size)
+	rentals, totalCount, err := gateway.rentalsAPI.GetUserRentals(ctx.Context(), username, (page-1)*size, size)
 	if err != nil {
 		return err
 	}

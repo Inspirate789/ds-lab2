@@ -3,7 +3,7 @@ logging:
 web:
   host:
   port: 8080
-  path_prefix: /api/v1
+  pathPrefix: /api/v1/payments
 db:
   driverName: postgres
   connectionString: postgres://program:test@postgres:5432/payments?sslmode=disable
