@@ -4,9 +4,9 @@ import "github.com/Inspirate789/ds-lab2/internal/models"
 
 type PaymentDTO struct {
 	ID         int64                `json:"id"`
-	PaymentUID string               `json:"payment_uid"`
+	PaymentUID string               `json:"paymentUid"`
 	Status     models.PaymentStatus `json:"status"`
-	Price      int64                `json:"price"`
+	Price      uint64               `json:"price"`
 }
 
 func NewPaymentDTO(car models.Payment) PaymentDTO {

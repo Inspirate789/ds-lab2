@@ -51,7 +51,7 @@ func (d *Delivery) getCars(ctx *fiber.Ctx) error {
 
 	limit, err := strconv.ParseUint(ctx.Query("limit"), 10, 64)
 	if err != nil {
-		d.logger.Debug("cars limit not set, return all persons")
+		d.logger.Debug("cars limit not set, return all cars")
 		limit = math.MaxInt64
 	}
 

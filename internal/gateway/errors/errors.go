@@ -6,15 +6,11 @@ func (e GatewayError) Error() string {
 	return string(e)
 }
 
+// TODO: use errors.Wrap() ?
+
 func (e GatewayError) Map() map[string]any {
 	return map[string]any{"message": e.Error()}
 }
-
-const (
-	ErrPaymentNotFound    GatewayError = "payment not found"
-	ErrRentalNotFound     GatewayError = "rental not found"
-	ErrRentalNotPermitted GatewayError = "rental not permitted"
-)
 
 func ErrInvalidRentalRequest(msg string) GatewayError {
 	return GatewayError("invalid rental request: " + msg)

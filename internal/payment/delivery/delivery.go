@@ -42,7 +42,6 @@ func (d *Delivery) AddHandlers(router fiber.Router) {
 func (d *Delivery) createPayment(ctx *fiber.Ctx) error {
 	price, err := strconv.ParseUint(ctx.Query("price"), 10, 64)
 	if err != nil {
-		d.logger.Debug("cars offset not set, use default 0")
 		return ctx.Status(fiber.StatusBadRequest).JSON(errors.ErrPaymentPriceNotSet.Map())
 	}
 

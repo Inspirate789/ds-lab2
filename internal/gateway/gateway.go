@@ -5,7 +5,9 @@ import (
 	carErrors "github.com/Inspirate789/ds-lab2/internal/car/delivery/errors"
 	"github.com/Inspirate789/ds-lab2/internal/gateway/errors"
 	"github.com/Inspirate789/ds-lab2/internal/models"
+	paymentErrors "github.com/Inspirate789/ds-lab2/internal/payment/delivery/errors"
 	"github.com/Inspirate789/ds-lab2/internal/pkg/app"
+	rentalErrors "github.com/Inspirate789/ds-lab2/internal/rental/delivery/errors"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/multierr"
 	"log/slog"
@@ -135,7 +137,7 @@ func (gateway *Gateway) getRentals(ctx *fiber.Ctx) error {
 		if err != nil {
 			return err
 		} else if !found {
-			return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrPaymentNotFound.Map())
+			return ctx.Status(fiber.StatusNotFound).JSON(paymentErrors.ErrPaymentNotFound.Map())
 		}
 
 		payments = append(payments, payment)
@@ -152,9 +154,9 @@ func (gateway *Gateway) getRental(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	} else if !found {
-		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrRentalNotFound.Map())
+		return ctx.Status(fiber.StatusNotFound).JSON(rentalErrors.ErrRentalNotFound.Map())
 	} else if !permitted {
-		return ctx.Status(fiber.StatusForbidden).JSON(errors.ErrRentalNotPermitted.Map())
+		return ctx.Status(fiber.StatusForbidden).JSON(rentalErrors.ErrRentalNotPermitted.Map())
 	}
 
 	car, found, err := gateway.carsAPI.GetCar(ctx.Context(), rental.CarUID)
@@ -168,7 +170,7 @@ func (gateway *Gateway) getRental(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	} else if !found {
-		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrPaymentNotFound.Map())
+		return ctx.Status(fiber.StatusNotFound).JSON(paymentErrors.ErrPaymentNotFound.Map())
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(NewRentalDTO(rental, car, payment))
@@ -266,9 +268,9 @@ func (gateway *Gateway) cancelCarRental(ctx *fiber.Ctx) (err error) {
 	if err != nil {
 		return err
 	} else if !found {
-		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrRentalNotFound.Map())
+		return ctx.Status(fiber.StatusNotFound).JSON(rentalErrors.ErrRentalNotFound.Map())
 	} else if !permitted {
-		return ctx.Status(fiber.StatusForbidden).JSON(errors.ErrRentalNotPermitted.Map())
+		return ctx.Status(fiber.StatusForbidden).JSON(rentalErrors.ErrRentalNotPermitted.Map())
 	}
 
 	// 2. Unlock car
@@ -295,7 +297,7 @@ func (gateway *Gateway) cancelCarRental(ctx *fiber.Ctx) (err error) {
 	if err != nil {
 		return err
 	} else if !found {
-		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrPaymentNotFound.Map())
+		return ctx.Status(fiber.StatusNotFound).JSON(paymentErrors.ErrPaymentNotFound.Map())
 	}
 
 	defer func() {
@@ -318,9 +320,9 @@ func (gateway *Gateway) finishCarRental(ctx *fiber.Ctx) error {
 	if err != nil {
 		return err
 	} else if !found {
-		return ctx.Status(fiber.StatusNotFound).JSON(errors.ErrRentalNotFound.Map())
+		return ctx.Status(fiber.StatusNotFound).JSON(rentalErrors.ErrRentalNotFound.Map())
 	} else if !permitted {
-		return ctx.Status(fiber.StatusForbidden).JSON(errors.ErrRentalNotPermitted.Map())
+		return ctx.Status(fiber.StatusForbidden).JSON(rentalErrors.ErrRentalNotPermitted.Map())
 	}
 
 	// 2. Unlock car
@@ -330,7 +332,7 @@ func (gateway *Gateway) finishCarRental(ctx *fiber.Ctx) error {
 	}
 
 	// 3. Finish rental
-	_, err = gateway.rentalsAPI.SetRentalStatus(ctx.Context(), rentalUID, models.RentalCanceled)
+	_, err = gateway.rentalsAPI.SetRentalStatus(ctx.Context(), rentalUID, models.RentalFinished)
 	if err != nil {
 		return err
 	}

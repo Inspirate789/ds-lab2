@@ -28,7 +28,7 @@ func (r *SqlxRepository) HealthCheck(ctx context.Context) error {
 }
 
 func (r *SqlxRepository) CreatePayment(ctx context.Context, price uint64) (res models.Payment, err error) {
-	payment := Payment{
+	payment := PaymentDTO{
 		ID:         0,
 		PaymentUID: uuid.New().String(),
 		Status:     models.PaymentPaid,
@@ -44,7 +44,7 @@ func (r *SqlxRepository) CreatePayment(ctx context.Context, price uint64) (res m
 }
 
 func (r *SqlxRepository) GetPayment(ctx context.Context, paymentUID string) (models.Payment, bool, error) {
-	var dto Payment
+	var dto PaymentDTO
 
 	err := sqlxutils.Get(ctx, r.db, &dto, selectPaymentQuery, paymentUID)
 	if errors.Is(err, sql.ErrNoRows) {

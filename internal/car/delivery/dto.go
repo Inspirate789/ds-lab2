@@ -7,7 +7,7 @@ type CarDTO struct {
 	CarUID             string         `json:"car_uid"`
 	Brand              string         `json:"brand"`
 	Model              string         `json:"model"`
-	RegistrationNumber string         `json:"registration_number"`
+	RegistrationNumber string         `json:"registrationNumber"`
 	Power              uint64         `json:"power"`
 	Price              uint64         `json:"price"`
 	Type               models.CarType `json:"type"`

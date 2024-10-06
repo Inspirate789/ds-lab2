@@ -32,7 +32,7 @@ type FiberApp struct {
 	logger *slog.Logger
 }
 
-func newFiberError(msg string) map[string]any {
+func newFiberError(msg string) fiber.Map {
 	return fiber.Map{"message": msg}
 }
 

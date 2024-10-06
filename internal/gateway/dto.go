@@ -14,15 +14,15 @@ type CarRentalRequest struct {
 type CarRentalPayment struct {
 	PaymentUID string               `json:"paymentUid"`
 	Status     models.PaymentStatus `json:"status"`
-	Price      int64                `json:"price"`
+	Price      uint64               `json:"price"`
 }
 
 type CarRentalResponse struct {
 	RentalUID string              `json:"rentalUid"`
 	Status    models.RentalStatus `json:"status"`
 	CarUID    string              `json:"carUid"`
-	DateFrom  time.Time           `json:"dateFrom"`
-	DateTo    time.Time           `json:"dateTo"`
+	DateFrom  string              `json:"dateFrom"`
+	DateTo    string              `json:"dateTo"`
 	Payment   CarRentalPayment    `json:"payment"`
 }
 
@@ -31,8 +31,8 @@ func NewRentalResponse(rental models.Rental, payment models.Payment) CarRentalRe
 		RentalUID: rental.RentalUID,
 		Status:    rental.Status,
 		CarUID:    rental.CarUID,
-		DateFrom:  rental.DateFrom,
-		DateTo:    rental.DateTo,
+		DateFrom:  rental.DateFrom.Format(time.DateOnly),
+		DateTo:    rental.DateTo.Format(time.DateOnly),
 		Payment: CarRentalPayment{
 			PaymentUID: payment.PaymentUID,
 			Status:     payment.Status,
@@ -86,13 +86,13 @@ type RentalCarDTO struct {
 type RentalPayment struct {
 	PaymentUID string               `json:"paymentUid"`
 	Status     models.PaymentStatus `json:"status"`
-	Price      int64                `json:"price"`
+	Price      uint64               `json:"price"`
 }
 
 type RentalDTO struct {
 	RentalUID string              `json:"rentalUid"`
-	DateFrom  time.Time           `json:"dateFrom"`
-	DateTo    time.Time           `json:"dateTo"`
+	DateFrom  string              `json:"dateFrom"`
+	DateTo    string              `json:"dateTo"`
 	Status    models.RentalStatus `json:"status"`
 	Car       RentalCarDTO        `json:"car"`
 	Payment   RentalPayment       `json:"payment"`
@@ -101,8 +101,8 @@ type RentalDTO struct {
 func NewRentalDTO(rental models.Rental, car models.Car, payment models.Payment) RentalDTO {
 	return RentalDTO{
 		RentalUID: rental.RentalUID,
-		DateFrom:  rental.DateFrom,
-		DateTo:    rental.DateTo,
+		DateFrom:  rental.DateFrom.Format(time.DateOnly),
+		DateTo:    rental.DateTo.Format(time.DateOnly),
 		Status:    rental.Status,
 		Car: RentalCarDTO{
 			CarUID:             car.CarUID,
