@@ -39,7 +39,7 @@ func (d *Delivery) AddHandlers(router fiber.Router) {
 	router.Get("/", d.getRentals)
 	router.Post("/", d.createRental)
 	router.Get("/:rentalUID", d.getRental)
-	router.Delete("/:rentalUID/status", d.updateRentalStatus)
+	router.Put("/:rentalUID/status", d.updateRentalStatus)
 }
 
 func (d *Delivery) getRentals(ctx *fiber.Ctx) error {
@@ -70,12 +70,14 @@ func (d *Delivery) createRental(ctx *fiber.Ctx) error {
 
 	err := ctx.BodyParser(&dto)
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{})
+		d.logger.Error(err.Error())
+		return ctx.Status(fiber.StatusBadRequest).JSON(errors.ErrInvalidRentalRequest.Map())
 	}
 
 	rentalProperties, err := dto.ToModel()
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{})
+		d.logger.Error(err.Error())
+		return ctx.Status(fiber.StatusBadRequest).JSON(errors.ErrConvertRentalRequest.Map())
 	}
 
 	rental, err := d.useCase.CreateRental(ctx.Context(), rentalProperties)

@@ -32,6 +32,9 @@ func ErrInvalidRentalPeriod(dateFrom, dateTo string) GatewayError {
 	return GatewayError("invalid period start date: [" + dateFrom + ", " + dateTo + "]")
 }
 
-func ErrRollbackWrap(err error) GatewayError {
+func ErrRollbackWrap(err error) error {
+	if err == nil {
+		return nil
+	}
 	return GatewayError("rollback: " + err.Error())
 }

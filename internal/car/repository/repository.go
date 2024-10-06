@@ -60,18 +60,20 @@ func (r *SqlxRepository) LockCar(ctx context.Context, carUID string) (res models
 	err = sqlxutils.RunTx(ctx, r.db, sql.LevelDefault, func(tx *sqlx.Tx) error {
 		err = sqlxutils.Get(ctx, r.db, &dto, selectCarQuery, carUID)
 		if errors.Is(err, sql.ErrNoRows) {
-			found = false
 			err = nil
 			return nil
 		} else if err != nil {
 			return err
+		} else {
+			found = true
 		}
 
 		return sqlxutils.Get(ctx, r.db, &dto, lockCarQuery, carUID)
 	})
 	if errors.Is(err, sql.ErrNoRows) {
-		success = false
 		err = nil
+	} else {
+		success = true
 	}
 
 	return dto.ToModel(), found, success, err

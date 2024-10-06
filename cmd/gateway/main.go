@@ -54,7 +54,7 @@ func shutdownApp(webApp WebApp, logger *slog.Logger) {
 
 func main() {
 	var configPath string
-	pflag.StringVarP(&configPath, "config", "c", "configs/app.yaml", "Config file path")
+	pflag.StringVarP(&configPath, "config", "c", "configs/gateway.yaml", "Config file path")
 	pflag.Parse()
 
 	config, err := app.ReadLocalConfig(configPath)

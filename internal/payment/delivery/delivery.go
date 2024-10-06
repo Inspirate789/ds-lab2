@@ -42,6 +42,7 @@ func (d *Delivery) AddHandlers(router fiber.Router) {
 func (d *Delivery) createPayment(ctx *fiber.Ctx) error {
 	price, err := strconv.ParseUint(ctx.Query("price"), 10, 64)
 	if err != nil {
+		d.logger.Error(err.Error())
 		return ctx.Status(fiber.StatusBadRequest).JSON(errors.ErrPaymentPriceNotSet.Map())
 	}
 

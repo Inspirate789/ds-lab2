@@ -20,6 +20,8 @@ func NewRentalPropertiesDTO(properties models.RentalProperties) RentalProperties
 		PaymentUID: properties.PaymentUID,
 		CarUID:     properties.CarUID,
 		DateFrom:   properties.DateFrom.Format(time.DateOnly),
+		DateTo:     properties.DateTo.Format(time.DateOnly),
+		Status:     properties.Status,
 	}
 }
 
@@ -40,6 +42,7 @@ func (rental RentalPropertiesDTO) ToModel() (models.RentalProperties, error) {
 		CarUID:     rental.CarUID,
 		DateFrom:   dateFrom,
 		DateTo:     dateTo,
+		Status:     rental.Status,
 	}, nil
 }
 

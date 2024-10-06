@@ -7,7 +7,7 @@ const (
 	selectRentalQuery  = `select * from rentals where rental_uid = $1 limit 1;`
 	insertRentalQuery  = `
 		insert into rentals(rental_uid, username, payment_uid, car_uid, date_from, date_to, status) 
-		values (:id, :rental_uid, :username, :payment_uid, :car_uid, :date_from, :date_to, :status) 
+		values (:rental_uid, :username, :payment_uid, :car_uid, :date_from, :date_to, :status) 
 		returning *;
 	`
 	updateRentalStatusQuery = `update rentals set status = $2 where rental_uid = $1;`

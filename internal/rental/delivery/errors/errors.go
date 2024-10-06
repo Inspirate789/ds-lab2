@@ -11,6 +11,8 @@ func (e RentalError) Map() map[string]any {
 }
 
 const (
-	ErrRentalNotFound     RentalError = "rental not found"
-	ErrRentalNotPermitted RentalError = "rental not permitted"
+	ErrRentalNotFound       RentalError = "rental not found"
+	ErrRentalNotPermitted   RentalError = "rental not permitted"
+	ErrInvalidRentalRequest RentalError = "invalid rental request"
+	ErrConvertRentalRequest RentalError = "rental request conversion failed"
 )

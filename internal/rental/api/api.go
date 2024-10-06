@@ -156,6 +156,8 @@ func (api *RentalsAPI) CreateRental(ctx context.Context, properties models.Renta
 		return models.Rental{}, err
 	}
 
+	req.Header.Set("Content-Type", "application/json")
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return models.Rental{}, err
