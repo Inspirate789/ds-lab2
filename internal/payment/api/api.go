@@ -11,8 +11,8 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"path/filepath"
 	"strconv"
-	"strings"
 )
 
 type Client interface {
@@ -34,7 +34,7 @@ func New(baseURL string, client *http.Client, logger *slog.Logger) *PaymentsAPI 
 }
 
 func (api *PaymentsAPI) HealthCheck(ctx context.Context) error {
-	endpoint := strings.SplitN(api.baseURL, "/", 2)[0] + "/manage/health"
+	endpoint := filepath.Join(api.baseURL, "manage/health")
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
@@ -61,7 +61,7 @@ func (api *PaymentsAPI) HealthCheck(ctx context.Context) error {
 }
 
 func (api *PaymentsAPI) CreatePayment(ctx context.Context, price uint64) (res models.Payment, err error) {
-	endpoint := api.baseURL + "/payments?price=" + strconv.FormatUint(price, 10)
+	endpoint := filepath.Join(api.baseURL, "payments?price="+strconv.FormatUint(price, 10))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, nil)
 	if err != nil {
@@ -94,7 +94,7 @@ func (api *PaymentsAPI) CreatePayment(ctx context.Context, price uint64) (res mo
 }
 
 func (api *PaymentsAPI) SetPaymentStatus(ctx context.Context, paymentUID string, status models.PaymentStatus) (found bool, err error) {
-	endpoint := api.baseURL + "/payments/" + paymentUID + "/status"
+	endpoint := filepath.Join(api.baseURL, "payments", paymentUID, "status")
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, endpoint, bytes.NewBufferString(fmt.Sprint(status)))
 	if err != nil {
@@ -122,7 +122,7 @@ func (api *PaymentsAPI) SetPaymentStatus(ctx context.Context, paymentUID string,
 }
 
 func (api *PaymentsAPI) GetPayment(ctx context.Context, paymentUID string) (res models.Payment, found bool, err error) {
-	endpoint := api.baseURL + "/payments/" + paymentUID
+	endpoint := filepath.Join(api.baseURL, "payments", paymentUID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {

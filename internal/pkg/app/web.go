@@ -43,7 +43,7 @@ func checkReadiness(delivery HealthChecker) func(ctx *fiber.Ctx) error {
 			return ctx.Status(fiber.StatusServiceUnavailable).JSON(newFiberError(err.Error()))
 		}
 
-		return ctx.Status(fiber.StatusOK).SendString("ready")
+		return ctx.Status(fiber.StatusOK).SendString("healthy")
 	}
 }
 

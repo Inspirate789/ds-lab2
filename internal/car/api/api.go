@@ -10,7 +10,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"strings"
+	"path/filepath"
 )
 
 type Client interface {
@@ -32,7 +32,7 @@ func New(baseURL string, client *http.Client, logger *slog.Logger) *CarsAPI {
 }
 
 func (api *CarsAPI) HealthCheck(ctx context.Context) error {
-	endpoint := strings.SplitN(api.baseURL, "/", 2)[0] + "/manage/health"
+	endpoint := filepath.Join(api.baseURL, "manage/health")
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
@@ -59,7 +59,7 @@ func (api *CarsAPI) HealthCheck(ctx context.Context) error {
 }
 
 func (api *CarsAPI) GetCars(ctx context.Context, offset, limit uint64, showAll bool) (res []models.Car, totalCount uint64, err error) {
-	endpoint := api.baseURL + fmt.Sprintf("/cars?offset=%d&limit=%d&showAll=%v", offset, limit, showAll)
+	endpoint := filepath.Join(api.baseURL, fmt.Sprintf("/cars?offset=%d&limit=%d&showAll=%v", offset, limit, showAll))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
@@ -92,7 +92,7 @@ func (api *CarsAPI) GetCars(ctx context.Context, offset, limit uint64, showAll b
 }
 
 func (api *CarsAPI) GetCar(ctx context.Context, carUID string) (res models.Car, found bool, err error) {
-	endpoint := api.baseURL + "/cars/" + carUID
+	endpoint := filepath.Join(api.baseURL, "cars", carUID)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
@@ -127,7 +127,7 @@ func (api *CarsAPI) GetCar(ctx context.Context, carUID string) (res models.Car, 
 }
 
 func (api *CarsAPI) LockCar(ctx context.Context, carUID string) (res models.Car, found, success bool, err error) {
-	endpoint := api.baseURL + "/cars/" + carUID + "/lock"
+	endpoint := filepath.Join(api.baseURL, "cars", carUID, "lock")
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, nil)
 	if err != nil {
@@ -164,7 +164,7 @@ func (api *CarsAPI) LockCar(ctx context.Context, carUID string) (res models.Car,
 }
 
 func (api *CarsAPI) UnlockCar(ctx context.Context, carUID string) (err error) {
-	endpoint := api.baseURL + "/cars/" + carUID + "/lock"
+	endpoint := filepath.Join(api.baseURL, "cars", carUID, "lock")
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, endpoint, nil)
 	if err != nil {
