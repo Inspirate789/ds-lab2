@@ -56,7 +56,7 @@ jobs:
 
       - name: Build and push images
         timeout-minutes: 10
-        run: PIPELINE_ID=${{ github.run_number }} docker compose build --push
+        run: PIPELINE_ID=${{ github.run_number }} DOCKER_DEFAULT_PLATFORM=linux/amd64 docker compose build --push
 
   deploy:
     name: Deploy
@@ -66,7 +66,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Copy docker-compose.yaml to production server
+      - name: Copy docker-compose.yaml to test server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.PROD_HOST }}
@@ -92,42 +92,52 @@ jobs:
             docker compose pull &&
             docker compose up -d
 
-#  deploy:
-#    name: Autograding
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#        with:
-#          fetch-depth: 0
-#
-#      - uses: docker/setup-buildx-action@v2
-#
-#      # TODO build and run unit tests
-#
-#      - name: Build images
-#        timeout-minutes: 10
-#        run: PIPELINE_ID=${{ github.run_number }} docker compose build
-#
-#      - name: Run containers
-#        timeout-minutes: 5
-#        run: |
-#          docker compose up -d
-#          ./scripts/wait-script.sh
-#        env:
-#          WAIT_PORTS: 8080,8070,8060,8050
-#
-#      - name: Run API Tests
-#        uses: matt-ball/newman-action@master
-#        with:
-#          collection: postman/collection.json
-#          environment: postman/environment.json
-#          delayRequest: 100
-#          reporters: '[ "cli" ]'
-#
-#      - uses: education/autograding@v1
-#        id: autograder
-#        continue-on-error: true
-#
+  api_test:
+    needs: [ deploy ]
+    name: API test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Add app URL to Postman environment
+        uses: sergeysova/jq-action@v2
+        id: version
+        with:
+          cmd: >-
+            jq '.values[0].value = "http://${{ secrets.PROD_HOST }}:${{ secrets.PROD_PORT }}"'
+            < postman/environment.json > out.tmp &&
+            mv out.tmp postman/environment.json
+
+      - name: Run API Tests
+        uses: matt-ball/newman-action@master
+        with:
+          collection: postman/collection.json
+          environment: postman/environment.json
+          delayRequest: 100
+          reporters: '[ "cli" ]'
+
+  autograding:
+    name: Autograding
+    needs: [ api_test ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Add app URL to Postman environment
+        uses: sergeysova/jq-action@v2
+        id: version
+        with:
+          cmd: >-
+            jq '.values[0].value = "http://${{ secrets.PROD_HOST }}:${{ secrets.PROD_PORT }}"'
+            < postman/environment.json > out.tmp &&
+            mv out.tmp postman/environment.json
+
+      - name: Autograding
+        uses: education/autograding@v1
+        continue-on-error: true
+
 #      - name: Github auto grader mark
 #        uses: Romanow/google-sheet-autograder-marker@v1.0
 #        with:
@@ -137,8 +147,17 @@ jobs:
 #          user_column: 'D'
 #          column_offset: 'F'
 #          mark: "'+"
-#
-#      - name: Stop containers
-#        if: always()
-#        continue-on-error: true
-#        run: docker compose down -v
+
+  shutdown:
+    name: Shutdown test environment
+    needs: [deploy, api_test, autograding]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Stop containers
+        if: always()
+        continue-on-error: true
+        run: docker compose down -v

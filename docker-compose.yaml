@@ -20,9 +20,6 @@ services:
         MAIN_PATH: ./cmd/gateway/main.go
         CONFIG_PATH: ./configs/gateway.yaml
         PIPELINE_ID: ${PIPELINE_ID}
-      platforms:
-        - "linux/amd64"
-        - "linux/arm64"
     image: inspirate789/ds-gateway:latest
     restart: always
     ports:
@@ -36,9 +33,6 @@ services:
         CONFIG_PATH: ./configs/cars.yaml
         MIGRATIONS_FOLDER: ./migrations/car
         PIPELINE_ID: ${PIPELINE_ID}
-      platforms:
-        - "linux/amd64"
-        - "linux/arm64"
     image: inspirate789/ds-cars-api:latest
     restart: always
     ports:
@@ -52,9 +46,6 @@ services:
         CONFIG_PATH: ./configs/rental.yaml
         MIGRATIONS_FOLDER: ./migrations/rental
         PIPELINE_ID: ${PIPELINE_ID}
-      platforms:
-        - "linux/amd64"
-        - "linux/arm64"
     image: inspirate789/ds-rental-api:latest
     restart: always
     ports:
@@ -68,9 +59,6 @@ services:
         CONFIG_PATH: ./configs/payment.yaml
         MIGRATIONS_FOLDER: ./migrations/payment
         PIPELINE_ID: ${PIPELINE_ID}
-      platforms:
-        - "linux/amd64"
-        - "linux/arm64"
     image: inspirate789/ds-payment-api:latest
     restart: always
     ports:
