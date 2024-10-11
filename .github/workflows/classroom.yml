@@ -74,7 +74,7 @@ jobs:
           key: ${{ secrets.PROD_PRIVATE_KEY }}
           passphrase: ${{ secrets.PROD_SSH_PASSPHRASE }}
           source: "docker-compose.yaml"
-          target: /home/${{ PROD_USERNAME }}
+          target: /home/${{ secrets.PROD_USERNAME }}
 
       - name: Start app
         uses: appleboy/ssh-action@v1.0.3
