@@ -80,16 +80,15 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         env:
           PROD_USERNAME: ${{ secrets.PROD_USERNAME }}
-          PROD_CONFIG: ${{secrets.PROD_CONFIG}}
         with:
           host: ${{ secrets.PROD_HOST }}
           username: ${{ secrets.PROD_USERNAME }}
           key: ${{ secrets.PROD_PRIVATE_KEY }}
           passphrase: ${{ secrets.PROD_SSH_PASSPHRASE }}
-          envs: PROD_USERNAME, PROD_CONFIG
+          envs: PROD_USERNAME
           allenvs: true
           script: >-
-            cd /home/${{ PROD_USERNAME }} &&
+            cd /home/$PROD_USERNAME &&
             docker compose pull &&
             docker compose up -d
 
