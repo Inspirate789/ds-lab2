@@ -56,7 +56,7 @@ jobs:
 
       - name: Build and push images
         timeout-minutes: 10
-        run: PIPELINE_ID=${{ github.run_number }} DOCKER_DEFAULT_PLATFORM=linux/amd64 docker compose build --push
+        run: PIPELINE_ID=${{ github.run_number }} docker compose build --push
 
   deploy:
     name: Deploy
@@ -157,7 +157,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Stop containers
-        if: always()
+      - name: Start app
+        uses: appleboy/ssh-action@v1.0.3
         continue-on-error: true
-        run: docker compose down -v
+        env:
+          PROD_USERNAME: ${{ secrets.PROD_USERNAME }}
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USERNAME }}
+          key: ${{ secrets.PROD_PRIVATE_KEY }}
+          passphrase: ${{ secrets.PROD_SSH_PASSPHRASE }}
+          envs: PROD_USERNAME
+          allenvs: true
+          script: >-
+            cd /home/$PROD_USERNAME &&
+            docker compose down --volumes
