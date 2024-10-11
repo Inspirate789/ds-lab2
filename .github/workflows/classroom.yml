@@ -91,7 +91,8 @@ jobs:
           script: >-
             cd /home/$PROD_USERNAME &&
             docker compose pull &&
-            docker compose up -d ./scripts/wait-script.sh
+            docker compose up -d &&
+            ./scripts/wait-script.sh
 
   api_test:
     needs: [ deploy ]
