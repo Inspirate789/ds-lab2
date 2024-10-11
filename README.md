@@ -26,7 +26,7 @@
 6. Код хранить на Github, для сборки использовать Github Actions.
 7. Gateway Service должен запускаться на порту 8080, остальные сервисы запускать на портах 8050, 8060, 8070.
 8. Каждый сервис должен быть завернут в docker.
-9. В [docker-compose.yml](docker-compose.yml) прописать сборку и запуск docker контейнеров.
+9. В [docker-compose.yaml](docker-compose.yaml) прописать сборку и запуск docker контейнеров.
 10. В [classroom.yml](.github/workflows/classroom.yml) дописать шаги на сборку и прогон unit-тестов.
 11. Для автоматических прогонов тестов в файле [autograding.json](.github/classroom/autograding.json)
     и [classroom.yml](.github/workflows/classroom.yml) заменить `<variant>` на ваш вариант.
