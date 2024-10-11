@@ -73,7 +73,7 @@ jobs:
           username: ${{ secrets.PROD_USERNAME }}
           key: ${{ secrets.PROD_PRIVATE_KEY }}
           passphrase: ${{ secrets.PROD_SSH_PASSPHRASE }}
-          source: "docker-compose.yaml"
+          source: "docker-compose.yaml,migrations"
           target: /home/${{ secrets.PROD_USERNAME }}
 
       - name: Start app
@@ -151,7 +151,7 @@ jobs:
   shutdown:
     name: Shutdown test environment
     needs: [deploy, api_test, autograding]
-    if: always()
+    if: ${{ always() && contains(join(needs.*.result, ','), 'success') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
