@@ -1,0 +1,2 @@
+"Status","Start Time","Stop Time","Duration in ms","Parent Suite","Suite","Sub Suite","Test Class","Test Method","Name","Description"
+"passed","Sat Oct 12 08:23:11 GMT 2024","Sat Oct 12 08:23:11 GMT 2024","1","","GatewaySuite","","","","TestHealthCheck",""
