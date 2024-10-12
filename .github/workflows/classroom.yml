@@ -47,8 +47,8 @@ jobs:
         with:
           version: v1.60
 
-      - name: Run unit tests for business logic
-        run: ALLURE_OUTPUT_PATH=../../../ go test -v ./internal/gateway
+      - name: Run unit tests for gateway
+        run: ALLURE_OUTPUT_PATH=../../ go test -v ./internal/gateway
 
       - name: Upload test reports
         uses: actions/upload-artifact@v4
